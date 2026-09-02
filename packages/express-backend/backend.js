@@ -1,3 +1,5 @@
+console.log("SERVER FILE STARTED");
+
 import express from "express";
 
 const app = express();
@@ -45,20 +47,16 @@ const users = {
   ]
 };
 
-app.get("/users", (req, res) => {
-  res.send(users);
-});
+const findUsersByNameAndJob = (name, job) =>
+  users["users_list"].filter((user) => user["name"] === name && user["job"] === job);
 
-const findUserByName = (name) => {
-  return users["users_list"].filter(
-    (user) => user["name"] === name
-  );
-};
 
 app.get("/users", (req, res) => {
   const name = req.query.name;
+  const job = req.query.job;
+  console.log("GET")
   if (name != undefined) {
-    let result = findUserByName(name);
+    let result = findUsersByNameAndJob(name, job);
     result = { users_list: result };
     res.send(result);
   } else {
@@ -88,4 +86,14 @@ app.post("/users", (req, res) => {
   const userToAdd = req.body;
   addUser(userToAdd);
   res.send();
+});
+
+const delUserById = (id) => {
+  users["users_list"] = users["users_list"].filter((user) => user["id"] !== id);
+};
+
+app.delete("/users/:id", (req, res) => {
+  const id = req.params["id"]; //or req.params.id
+  delUserById(id);
+  res.send("User(s) deleted.")
 });
