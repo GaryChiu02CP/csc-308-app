@@ -102,9 +102,16 @@ const delUserById = (id) => {
 };
 
 app.delete("/users/:id", (req, res) => {
-  const id = req.params["id"]; //or req.params.id
-  delUserById(id);
-  res.send("User(s) deleted.")
+  const id = req.params.id;
+
+  const user = findUserById(id);
+
+  if (user === undefined) {
+    res.status(404).send("Resource not found.");
+  } else {
+    delUserById(id);
+    res.status(204).send();
+  }
 });
 
 app.listen(port, () => {
