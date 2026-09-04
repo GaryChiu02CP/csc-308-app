@@ -13,12 +13,6 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-app.listen(port, () => {
-  console.log(
-    `Example app listening at http://localhost:${port}`
-  );
-});
-
 const users = {
   users_list: [
     {
@@ -52,7 +46,6 @@ const users = {
 const findUsersByNameAndJob = (name, job) =>
   users["users_list"].filter((user) => user["name"] === name && user["job"] === job);
 
-
 app.get("/users", (req, res) => {
   const name = req.query.name;
   const job = req.query.job;
@@ -60,8 +53,10 @@ app.get("/users", (req, res) => {
   if (name != undefined) {
     let result = findUsersByNameAndJob(name, job);
     result = { users_list: result };
+    console.log("found")
     res.send(result);
   } else {
+    console.log("can't find")
     res.send(users);
   }
 });
@@ -81,13 +76,25 @@ app.get("/users/:id", (req, res) => {
 
 const addUser = (user) => {
   users["users_list"].push(user);
-  return res.status(201).json(user);
+  return user
 };
 
 app.post("/users", (req, res) => {
-  const userToAdd = req.body;
-  addUser(userToAdd);
-  res.send();
+  let newId = "";
+  for (let i = 0; i<3; i++) {
+    newId += (String.fromCharCode(Math.floor(Math.random() * 26) + 97));
+  }
+  for (let i = 0; i<3; i++) {
+    newId += (Math.floor(Math.random() * 10));
+  }
+
+  const userToAdd = {
+    id: newId,
+    ...req.body
+  };
+
+  userToAdd.id = newId
+  res.status(201).send(addUser(userToAdd));
 });
 
 const delUserById = (id) => {
@@ -98,4 +105,10 @@ app.delete("/users/:id", (req, res) => {
   const id = req.params["id"]; //or req.params.id
   delUserById(id);
   res.send("User(s) deleted.")
+});
+
+app.listen(port, () => {
+  console.log(
+    `Example app listening at http://localhost:${port}`
+  );
 });
