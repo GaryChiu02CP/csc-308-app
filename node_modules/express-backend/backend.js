@@ -81,7 +81,7 @@ app.get("/users/:id", (req, res) => {
 
 const addUser = (user) => {
   users["users_list"].push(user);
-  return user;
+  return res.status(201).json(user);
 };
 
 app.post("/users", (req, res) => {
