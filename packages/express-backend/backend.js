@@ -2,6 +2,7 @@ console.log("SERVER FILE STARTED");
 
 import express from "express";
 import cors from "cors";
+import userServices from "./user-services.js";
 
 const app = express();
 const port = 8000;
@@ -13,105 +14,59 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-const users = {
-  users_list: [
-    {
-      id: "xyz789",
-      name: "Charlie",
-      job: "Janitor"
-    },
-    {
-      id: "abc123",
-      name: "Mac",
-      job: "Bouncer"
-    },
-    {
-      id: "ppp222",
-      name: "Mac",
-      job: "Professor"
-    },
-    {
-      id: "yat999",
-      name: "Dee",
-      job: "Aspring actress"
-    },
-    {
-      id: "zap555",
-      name: "Dennis",
-      job: "Bartender"
-    }
-  ]
-};
-
-const findUsersByNameAndJob = (name, job) =>
-  users["users_list"].filter((user) => user["name"] === name && user["job"] === job);
-
 app.get("/users", (req, res) => {
   const name = req.query.name;
   const job = req.query.job;
-  console.log("GET")
-  if (name != undefined) {
-    let result = findUsersByNameAndJob(name, job);
-    result = { users_list: result };
-    console.log("found")
-    res.send(result);
-  } else {
-    console.log("can't find")
-    res.send(users);
-  }
-});
 
-const findUserById = (id) =>
-  users["users_list"].find((user) => user["id"] === id);
+  userServices.getUsers(name, job)
+    .then((users) => {
+      res.send({ users_list: users });
+    })
+    .catch((error) => {
+      res.status(500).send(error.message);
+    });
+});
 
 app.get("/users/:id", (req, res) => {
-  const id = req.params["id"]; //or req.params.id
-  let result = findUserById(id);
-  if (result === undefined) {
-    res.status(404).send("Resource not found.");
-  } else {
-    res.send(result);
-  }
-});
+  const id = req.params.id;
 
-const addUser = (user) => {
-  users["users_list"].push(user);
-  return user
-};
+  userServices.findUserById(id)
+    .then((user) => {
+      if (user === null) {
+        res.status(404).send("Resource not found.");
+      } else {
+        res.send(user);
+      }
+    })
+    .catch((error) => {
+      res.status(500).send(error.message);
+    });
+});
 
 app.post("/users", (req, res) => {
-  let newId = "";
-  for (let i = 0; i<3; i++) {
-    newId += (String.fromCharCode(Math.floor(Math.random() * 26) + 97));
-  }
-  for (let i = 0; i<3; i++) {
-    newId += (Math.floor(Math.random() * 10));
-  }
-
-  const userToAdd = {
-    id: newId,
-    ...req.body
-  };
-
-  userToAdd.id = newId
-  res.status(201).send(addUser(userToAdd));
+  userServices.addUser(req.body)
+    .then((savedUser) => {
+      res.status(201).send(savedUser);
+    })
+    .catch((error) => {
+      res.status(400).send(error.message);
+    });
 });
-
-const delUserById = (id) => {
-  users["users_list"] = users["users_list"].filter((user) => user["id"] !== id);
-};
 
 app.delete("/users/:id", (req, res) => {
   const id = req.params.id;
 
-  const user = findUserById(id);
-
-  if (user === undefined) {
-    res.status(404).send("Resource not found.");
-  } else {
-    delUserById(id);
-    res.status(204).send();
-  }
+  userServices.delUserById(id)
+    .then((user) => {
+      if (user === null) {
+        res.status(404).send("Resource not found.");
+      } else {
+        res.status(204).send();
+      }
+    })
+    .catch((error) => {
+      res.status(500).send(error.message);
+    });
 });
 
 app.listen(port, () => {
